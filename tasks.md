@@ -1,0 +1,7 @@
+- [x] **重构 Dev API 代理为 Rust 服务:**
+    - [x] **PLAN:** 分析现有 JS 代码 (from/), 规划 Rust 实现、API 结构和依赖处理。
+    - [x] **CREATIVE:** 解决 WASM 签名集成、选择 Rust 框架和 SSE 处理策略。
+    - [x] **IMPLEMENT:** 逐步实现 Rust 代码 (环境设置、请求构建、WASM 调用、SSE 处理、API 端点)。
+    - [x] **QA:** 编写单元测试和集成测试，部署到 Vercel 并验证功能。
+    - **目标:** 使用 Rust 和 `vercel-community/rust` 替换 `from/index.js`，提供类似 OpenAI 的 `/v1/chat/completions` 接口。
+    - **关键难点:** WASM 签名模块 (`libs/pkg/sign.wasm`) 在 Rust 中的集成。 

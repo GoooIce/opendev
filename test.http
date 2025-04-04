@@ -1,0 +1,16 @@
+curl http://localhost:3000/api/ping
+
+###
+
+curl -X POST http://localhost:3000/v1/chat/completions \
+-H "Content-Type: application/json" \
+-d '{
+  "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0-thinking",
+#   "model": "gemini-1.5-pro-002",
+  "messages": [
+    {
+      "role": "user",
+      "content": "htmx如何实现动效？"
+    }
+  ]
+}'

@@ -70,3 +70,11 @@ pids
 
 # Cursor specific
 .cursor/workspace/ 
+
+# from
+from/
+
+# env
+.env
+
+target/

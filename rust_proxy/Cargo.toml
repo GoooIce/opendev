@@ -1,0 +1,29 @@
+[package]
+name = "dev_rust_proxy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["stream", "json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+wasmtime = "18.0" # Or latest compatible version
+uuid = { version = "1", features = ["v4"] }
+sha2 = "0.10"
+futures-util = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+hex = "0.4" # Needed for sha256 output formatting
+once_cell = "1.19" # For lazy static initialization of Wasm engine/module
+tower-http = { version = "0.5.0", features = ["trace"] } # For Axum tracing layer
+http = "1.1.0" # Common types like StatusCode, HeaderMap
+bytes = "1.6.0" # Common byte buffer types, used by eventsource-client
+anyhow = "1.0.97"
+dotenvy = "0.15.0"
+
+[[bin]]
+name = "bootstrap" # Name expected by vercel-rust runtime
+path = "src/main.rs"
+
