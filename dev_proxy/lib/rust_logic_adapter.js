@@ -41,13 +41,9 @@ initPromise = (async () => {
 })();
 
 // --- Environment Variables ---
-const API_ENDPOINT = process.env.INTERNAL_RUST_LOGIC_API_ENDPOINT;
-const DEVICE_ID = process.env.INTERNAL_RUST_LOGIC_DEVICE_ID;
-const SID = process.env.INTERNAL_RUST_LOGIC_SID;
-
-// Hardcoded values from index.js for testing
-// const HARDCODED_DEVICE_ID_FOR_TESTING = "96bab86f327fb54c3e2b9d9d4a23082d2beefd13";
-// const HARDCODED_SID_FOR_TESTING = 'X6H1YFHUYfJxFAaDpL9k7SCCWSk9WwHhF1Dfeq-AkNRG-S9TVw6FYvhxVBVUQ8W24tKbN1Ypk2ehIPhbl11YxA';
+const API_ENDPOINT = process.env.API_ENDPOINT;
+const DEVICE_ID = process.env.DEVICE_ID;
+const SID = process.env.SID;
 
 /**
  * Builds the request parameters, including the signature.
