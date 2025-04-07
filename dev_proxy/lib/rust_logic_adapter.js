@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto'; // For nonce
-import path from 'path'; // To construct WASM file path
-import { fileURLToPath } from 'url'; // To resolve module path
+// import path from 'path'; // To construct WASM file path
+// import { fileURLToPath } from 'url'; // To resolve module path
 import logger from './logging';
 import { createParser } from 'eventsource-parser';
-import fs from 'fs/promises'; // Need fs to read the file buffer
+// import fs from 'fs/promises'; // Need fs to read the file buffer
+
+import { booted, sign as wasmSign } from './s.js'; // Import booted promise and sign function
+
 
 // --- Import from wasm-bindgen generated JS glue --- 
-import init, { sign as wasmSign } from './sign.mjs'; // Import default init and named sign
+// import init, { sign as wasmSign } from './sign.mjs'; // Import default init and named sign
 
 // Determine the path to the WASM file relative to this module
 // Correctly handle ES module __dirname equivalent
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const wasmPath = path.resolve(__dirname, 'sign_bg.wasm');
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+// const wasmPath = path.resolve(__dirname, 'sign_bg.wasm');
 // const wasmPathUrl = new URL(`file://${wasmPath}`); // No longer need the URL
 
 // --- Initialize WASM using the glue code with ArrayBuffer --- 
@@ -21,20 +24,19 @@ let wasmInitialized = false;
 let initError = null;
 let initPromise = null; // Keep track of the initialization promise
 
-initPromise = (async () => { // Assign the promise
+
+// ... wasm initialization using 'booted' ...
+initPromise = (async () => {
     try {
-        logger.debug(`Reading WASM file from path: ${wasmPath}`);
-        const wasmBuffer = await fs.readFile(wasmPath);
-        logger.debug(`Initializing WASM from buffer (size: ${wasmBuffer.byteLength})...`);
-        await init(wasmBuffer);
-        wasmInitialized = true;
-        logger.debug('WASM module initialized successfully via glue code with buffer.');
-        initPromise = null; // Clear the promise once resolved successfully
+        logger.debug('Waiting for WASM initialization via s.js booted promise...');
+        await booted; // Wait for the promise
+        wasmInitialized = true; // Flag as initialized
+        logger.debug('WASM module initialized successfully via s.js.');
+        initPromise = null;
     } catch (e) {
         initError = e;
-        logger.error('CRITICAL: Failed to initialize WASM via glue code with buffer:', e);
-        initPromise = null; // Clear the promise on error too
-        // Rethrow or handle as appropriate if needed elsewhere
+        logger.error('CRITICAL: Failed to initialize WASM via s.js:', e);
+        initPromise = null;
     }
 })();
 
@@ -55,7 +57,7 @@ const SID = process.env.INTERNAL_RUST_LOGIC_SID;
  * @returns {{headers: Headers, body: string}} The headers and JSON string body for the fetch request.
  * @throws {Error} If WASM init failed, env vars missing, or signing fails.
  */
-function buildRequestParamsJs(requestData) {
+async function buildRequestParamsJs(requestData) {
     if (!wasmInitialized) {
         throw new Error(`WASM module not initialized. Error: ${initError || 'Unknown initialization issue'}`);
     }
@@ -107,6 +109,10 @@ function buildRequestParamsJs(requestData) {
         logger.debug(`Calling imported WASM sign function with content: "${contentToSign.substring(0, 50)}..."`);
         // Ensure the correct device ID is passed for signing
         signature = wasmSign(nonce, timestamp, deviceIdToUse, contentToSign);
+
+        logger.debug('signature', signature);
+        logger.debug('signature length', signature.length);
+
         logger.debug('Imported WASM sign function returned successfully.');
     } catch (error) {
         logger.error('Imported WASM sign function failed:', error);
@@ -429,7 +435,7 @@ async function _ensureWasmInitialized() {
  * @throws {Error} If backend request fails or returns invalid response.
  */
 async function _sendBackendRequest(requestData, modelId) {
-    const { headers, body } = buildRequestParamsJs({ ...requestData, model: modelId });
+    const { headers, body } = await buildRequestParamsJs({ ...requestData, model: modelId });
     const backendResponse = await sendRequestJs(headers, body);
 
     if (!backendResponse.ok) {
