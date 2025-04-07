@@ -239,7 +239,7 @@ function __wbg_get_imports() {
  * @param {Object} imports - 导入对象
  * @param {WebAssembly.Memory} [maybe_memory] - 可选的内存对象
  */
-function __wbg_init_memory(_imports, _maybe_memory) {}
+function __wbg_init_memory() {}
 
 /**
  * 完成 WebAssembly 模块的初始化

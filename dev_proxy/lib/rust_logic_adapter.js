@@ -1013,7 +1013,7 @@ async function _processNonStreamingResponse(backendResponse, decoder) {
  * Main handler using the initialized WASM via glue code.
  * ADAPTED to use the new SSE processing logic and helper functions.
  */
-export async function handleRustLogicRequest(requestData, modelId, _providerConfig) {
+export async function handleRustLogicRequest(requestData, modelId) {
     logger.debug(`Handling request for internal_rust_logic with model: ${modelId}`);
 
     // Step 1: Ensure WASM is initialized

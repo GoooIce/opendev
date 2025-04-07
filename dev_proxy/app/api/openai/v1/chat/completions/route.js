@@ -280,7 +280,7 @@ export async function POST(request) {
 
         // 3. Handle Internal Provider (if applicable)
         if (isInternal) {
-            return await handleRustLogicRequest(requestBody, actualModelId, providerConfig);
+            return await handleRustLogicRequest(requestBody, actualModelId);
         }
 
         // 4. Prepare Backend Request Details
