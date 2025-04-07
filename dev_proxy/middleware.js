@@ -1,18 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
-import logger from '@/lib/logging'; // Assuming logger is adjusted for edge if needed
+import { NextResponse } from 'next/server';
+// import { Ratelimit } from '@upstash/ratelimit';
+// import { Redis } from '@upstash/redis';
 
 // --- Configuration ---
 // Read allowed tokens from environment variable (comma-separated)
 const ALLOWED_BEARER_TOKENS = new Set(
     (process.env.ALLOWED_API_KEYS || '').split(',').filter(Boolean)
 );
-const RATE_LIMIT_WINDOW = '60 s'; // Rate limit window (e.g., 60 seconds)
-const RATE_LIMIT_MAX_REQUESTS = 30; // Max requests per window per identifier
+// const RATE_LIMIT_WINDOW = '60 s'; // Rate limit window (e.g., 60 seconds)
+// const RATE_LIMIT_MAX_REQUESTS = 30; // Max requests per window per identifier
 
 // --- Initialize Upstash Redis and Ratelimit ---
-let redis = null;
+// let redis = null;
 let ratelimit = null;
 // let redisInitializationError = null; // Original variable
 
@@ -22,29 +21,29 @@ let redisInitializationError = bypassRateLimitForTesting
     ? new Error('Rate limiting intentionally bypassed for testing.')
     : null;
 if (bypassRateLimitForTesting) {
-    logger.warn('Middleware: Upstash Redis/Ratelimit initialization skipped for testing.');
+    console.warn('Middleware: Upstash Redis/Ratelimit initialization skipped for testing.');
 } else {
-  // Original initialization logic (keep commented out or enable by setting bypassRateLimitForTesting to false)
-  /*
-try {
-    // Ensure environment variables are present
-    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-        throw new Error('Upstash Redis URL or Token is not configured in environment variables.');
-    }
-    redis = Redis.fromEnv();
-    ratelimit = new Ratelimit({
-        redis: redis,
-        limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW),
-        analytics: true, // Optional: enable Upstash analytics
-        prefix: 'dev_proxy_ratelimit', // Namespace in Redis
-    });
-     logger.info('Upstash Redis Ratelimiter initialized successfully.');
-} catch (e) {
-    redisInitializationError = e;
-    logger.error("CRITICAL: Failed to initialize Upstash Redis/Ratelimit:", e);
-    // Depending on policy, middleware might block all requests or bypass rate limiting
-}
-  */
+    // Original initialization logic (keep commented out or enable by setting bypassRateLimitForTesting to false)
+    /*
+  try {
+      // Ensure environment variables are present
+      if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+          throw new Error('Upstash Redis URL or Token is not configured in environment variables.');
+      }
+      redis = Redis.fromEnv();
+      ratelimit = new Ratelimit({
+          redis: redis,
+          limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW),
+          analytics: true, // Optional: enable Upstash analytics
+          prefix: 'dev_proxy_ratelimit', // Namespace in Redis
+      });
+       console.info('Upstash Redis Ratelimiter initialized successfully.');
+  } catch (e) {
+      redisInitializationError = e;
+      console.error("CRITICAL: Failed to initialize Upstash Redis/Ratelimit:", e);
+      // Depending on policy, middleware might block all requests or bypass rate limiting
+  }
+    */
 }
 // --- TEMPORARY BYPASS FOR TESTING --- END
 
@@ -56,7 +55,7 @@ export async function middleware(request) {
     if (!pathname.startsWith('/api/openai/') && !pathname.startsWith('/api/models')) {
         return NextResponse.next(); // Skip middleware for other paths
     }
-    logger.info(`Middleware triggered for path: ${pathname}`);
+    console.info(`Middleware triggered for path: ${pathname}`);
 
     // --- Authentication --- Check for Bearer token
     const authHeader = request.headers.get('authorization');
@@ -67,8 +66,8 @@ export async function middleware(request) {
     }
 
     if (!authToken || authToken.length === 0) {
-         logger.warn('Middleware: Missing Bearer token.');
-         return new NextResponse(JSON.stringify({ error: 'Missing authorization token' }), {
+        console.warn('Middleware: Missing Bearer token.');
+        return new NextResponse(JSON.stringify({ error: 'Missing authorization token' }), {
             status: 401,
             headers: { 'Content-Type': 'application/json' }
         });
@@ -77,21 +76,21 @@ export async function middleware(request) {
     if (!ALLOWED_BEARER_TOKENS.has(authToken)) {
         // Obfuscate the token in logs for security
         const obfuscatedToken = authToken.length > 6 ? `${authToken.substring(0, 3)}...${authToken.substring(authToken.length - 3)}` : '***';
-        logger.warn(`Middleware: Invalid Bearer token provided: ${obfuscatedToken}`);
+        console.warn(`Middleware: Invalid Bearer token provided: ${obfuscatedToken}`);
         return new NextResponse(JSON.stringify({ error: 'Invalid authorization token' }), {
             status: 403, // Use 403 Forbidden for invalid credentials
             headers: { 'Content-Type': 'application/json' }
-         });
+        });
     }
 
-    logger.info(`Middleware: Authentication successful for token starting with ${authToken.substring(0,3)}...`);
+    console.info(`Middleware: Authentication successful for token starting with ${authToken.substring(0, 3)}...`);
 
     // --- Rate Limiting --- Use Upstash Ratelimit
     if (redisInitializationError) {
-        // logger.error("Rate limiting bypassed due to Redis initialization failure.");
-        logger.warn(`Rate limiting bypassed: ${redisInitializationError.message}`); // Updated log message
+        // console.error("Rate limiting bypassed due to Redis initialization failure.");
+        console.warn(`Rate limiting bypassed: ${redisInitializationError.message}`); // Updated log message
         // FAIL OPEN: Allow request but log the error/reason.
-         return NextResponse.next();
+        return NextResponse.next();
         // FAIL CLOSED Example:
         // return new NextResponse(JSON.stringify({ error: 'Internal Server Error: Rate limiter unavailable' }), {
         //     status: 500,
@@ -100,12 +99,12 @@ export async function middleware(request) {
     }
 
     if (!ratelimit) {
-         // This case should ideally not happen if initialization logic is correct
-         logger.error("CRITICAL: Ratelimiter object is null after initialization attempt.");
-         return new NextResponse(JSON.stringify({ error: 'Internal Server Error: Rate limiter configuration issue' }), {
-             status: 500,
-             headers: { 'Content-Type': 'application/json' }
-         });
+        // This case should ideally not happen if initialization logic is correct
+        console.error("CRITICAL: Ratelimiter object is null after initialization attempt.");
+        return new NextResponse(JSON.stringify({ error: 'Internal Server Error: Rate limiter configuration issue' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 
     // Use the authenticated token as the unique identifier for rate limiting
@@ -115,26 +114,26 @@ export async function middleware(request) {
 
         // Add rate limit headers to the response regardless of success/failure
         const responseHeaders = {
-             'X-RateLimit-Limit': String(limit),
-             'X-RateLimit-Remaining': String(remaining),
-             'X-RateLimit-Reset': String(reset) // Timestamp in ms when the limit resets
+            'X-RateLimit-Limit': String(limit),
+            'X-RateLimit-Remaining': String(remaining),
+            'X-RateLimit-Reset': String(reset) // Timestamp in ms when the limit resets
         };
 
         if (!success) {
             const obfuscatedToken = identifier.length > 6 ? `${identifier.substring(0, 3)}...${identifier.substring(identifier.length - 3)}` : '***';
-            logger.warn(`Middleware: Rate limit exceeded for token: ${obfuscatedToken}`);
-             const retryAfterSeconds = Math.ceil((reset - Date.now()) / 1000);
+            console.warn(`Middleware: Rate limit exceeded for token: ${obfuscatedToken}`);
+            const retryAfterSeconds = Math.ceil((reset - Date.now()) / 1000);
             responseHeaders['Retry-After'] = String(retryAfterSeconds > 0 ? retryAfterSeconds : 1); // Ensure positive value
             responseHeaders['Content-Type'] = 'application/json';
 
             return new NextResponse(JSON.stringify({ error: 'Too Many Requests' }), {
                 status: 429,
                 headers: responseHeaders
-             });
+            });
         }
 
         // If successful, pass the request to the next handler and add rate limit headers
-        logger.info(`Middleware: Rate limit check passed for token ${identifier.substring(0,3)}... (${remaining}/${limit} remaining)`);
+        console.info(`Middleware: Rate limit check passed for token ${identifier.substring(0, 3)}... (${remaining}/${limit} remaining)`);
         const response = NextResponse.next();
         // Add headers to the outgoing response
         Object.entries(responseHeaders).forEach(([key, value]) => {
@@ -143,17 +142,17 @@ export async function middleware(request) {
         return response;
 
     } catch (error) {
-         logger.error("Error during Upstash rate limiting check:", error);
-         // FAIL OPEN on unexpected errors during rate limit check
-         // Consider failing closed depending on security requirements.
-         return NextResponse.next();
+        console.error("Error during Upstash rate limiting check:", error);
+        // FAIL OPEN on unexpected errors during rate limit check
+        // Consider failing closed depending on security requirements.
+        return NextResponse.next();
     }
 }
 
 // Configure which paths the middleware runs on
 export const config = {
     // Matcher applies to API routes under /api/openai/ and /api/models/
-    matcher: ['/api/openai/:path*', '/api/models/:path*'],
+    matcher: ['/api/openai/:path*', '/api/v1/chat/completions/:path*'],
     // Note: Middleware currently runs for *all* requests matching the path,
     // including OPTIONS preflight requests. Add checks for request.method if needed.
 }; 
