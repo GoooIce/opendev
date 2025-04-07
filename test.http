@@ -31,3 +31,18 @@ curl -N POST http://localhost:3000/api/hello \
     }
   ]
 }'
+
+###
+
+curl -N -X GET https://opendev-red.vercel.app/api/hello \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer sk-proj-1234567890" \
+-d '{
+  "model": "dev/dev-claude-3-7-sonnet",
+  "messages": [
+    {
+      "role": "user",
+      "content": "gemma-3-27b有cloud模型吗？"
+    }
+  ]
+}'
