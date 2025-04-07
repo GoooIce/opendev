@@ -1,5 +1,5 @@
 [package]
-name = "dev_rust_proxy"
+name = "rust_proxy"
 version = "0.1.0"
 edition = "2024"
 
@@ -22,8 +22,20 @@ http = "1.1.0" # Common types like StatusCode, HeaderMap
 bytes = "1.6.0" # Common byte buffer types, used by eventsource-client
 anyhow = "1.0.97"
 dotenvy = "0.15.0"
+vercel_runtime = "1.1.4"
+
+# [build]
+# target = "x86_64-unknown-linux-musl"
 
 [[bin]]
 name = "bootstrap" # Name expected by vercel-rust runtime
 path = "src/main.rs"
+
+[[bin]]
+name = "main" # Name expected by vercel-rust runtime
+path = "api/main.rs"
+
+
+
+
 

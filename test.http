@@ -1,16 +1,33 @@
-curl http://localhost:3000/api/ping
+curl http://localhost:3000/api/health
 
 ###
 
-curl -X POST http://localhost:3000/v1/chat/completions \
+curl -N POST http://localhost:3000/api/openai/v1/chat/completions \
 -H "Content-Type: application/json" \
+-H "Authorization: Bearer sk-proj-1234567890" \
 -d '{
-  "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0-thinking",
-#   "model": "gemini-1.5-pro-002",
+  "model": "dev/dev-claude-3-7-sonnet",
+  "stream": true,
+#   "model": "dev/dev-gemini-1.5-pro",
   "messages": [
     {
       "role": "user",
-      "content": "htmx如何实现动效？"
+      "content": "http event steam 如何在vscode中直观的观察？"
+    }
+  ]
+}'
+
+###
+
+curl -N POST http://localhost:3000/api/hello \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer sk-proj-1234567890" \
+-d '{
+  "model": "dev/dev-claude-3-7-sonnet",
+  "messages": [
+    {
+      "role": "user",
+      "content": "gemma-3-27b有cloud模型吗？"
     }
   ]
 }'

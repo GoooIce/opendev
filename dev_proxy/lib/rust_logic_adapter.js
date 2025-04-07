@@ -131,24 +131,6 @@ function buildRequestParamsJs(requestData) {
         headers.set('sid', sidToUse);         // No prefix
     }
 
-    // Construct Body: Include original messages and the separate extra payload
-    const bodyPayload = {
-        content: contentToSign, // Send the signed content string as the main content? Or original messages? Check index.js
-        // Looking at index.js body: { content: content, threadId: threadId, extra: extraPayload }
-        // It seems to send the *signed* content as the primary 'content' field.
-        // This might be wrong if the backend expects the original message structure.
-        // Let's try sending the original messages structure instead, as that's more standard for chat APIs
-        messages: requestData.messages, // Keep original messages
-        stream: requestData.stream,
-        model: requestData.model, // Send model in body too? index.js doesn't explicitly show it here but extraPayload has it.
-        // Let's keep it simple and only include what index.js body shows:
-        threadId: requestData.threadId || null, // Allow passing threadId
-        extra: extraPayload,
-        // Let's REMOVE the fields not present in index.js body example to be closer:
-        // model: requestData.model, 
-        // stream: requestData.stream, 
-    };
-
     // Adjust bodyPayload based on closer reading of index.js example
     const finalBodyPayload = {
         content: contentToSign, // Use the (potentially last user message) content that was signed
@@ -511,7 +493,7 @@ const SSE_DONE_CHUNK = 'data: [DONE]\n\n';
 
 // --- SSE Parser Helper --- START
 
-const TEXT_CHUNK_THRESHOLD = 10; // Send text updates if delta is larger than this or stream finished
+// const TEXT_CHUNK_THRESHOLD = 10; // Send text updates if delta is larger than this or stream finished
 
 /**
  * Creates and configures the SSE parser.
@@ -519,86 +501,86 @@ const TEXT_CHUNK_THRESHOLD = 10; // Send text updates if delta is larger than th
  * @param {object} state - Shared state object { eventCount, rEventBuffer, lastREventTime }
  * @returns {import('eventsource-parser').EventSourceParser}
  */
-function _createSseParser(accumulator, state) {
-    return createParser({
-        onEvent: (event) => {
-            state.eventCount++;
-            // Handle special cases: Try to parse untyped events as content
-            if (event.type === 'event' && event.data && (!event.event || event.event === 'message')) {
-                try {
-                    const dataObj = JSON.parse(event.data);
-                    if (dataObj.result || dataObj.answer || dataObj.text || dataObj.content) {
-                        const content = dataObj.result || dataObj.answer || dataObj.text || dataObj.content || '';
-                        // logger.debug(`SSE Parser: Detected custom backend format, extracting content: "${content.substring(0, 50)}..."`);
-                        const contentEvent = { type: 'event', event: 'content', data: content };
-                        processSseEvent(contentEvent, accumulator); // Process the extracted content
-                        return; // Don't process the original 'message' event further
-                    }
-                } catch (e) { /* Ignore JSON parse error, proceed to normal handling */ }
-            }
+// function _createSseParser(accumulator, state) {
+//     return createParser({
+//         onEvent: (event) => {
+//             state.eventCount++;
+//             // Handle special cases: Try to parse untyped events as content
+//             if (event.type === 'event' && event.data && (!event.event || event.event === 'message')) {
+//                 try {
+//                     const dataObj = JSON.parse(event.data);
+//                     if (dataObj.result || dataObj.answer || dataObj.text || dataObj.content) {
+//                         const content = dataObj.result || dataObj.answer || dataObj.text || dataObj.content || '';
+//                         // logger.debug(`SSE Parser: Detected custom backend format, extracting content: "${content.substring(0, 50)}..."`);
+//                         const contentEvent = { type: 'event', event: 'content', data: content };
+//                         processSseEvent(contentEvent, accumulator); // Process the extracted content
+//                         return; // Don't process the original 'message' event further
+//                     }
+//                 } catch (e) { /* Ignore JSON parse error, proceed to normal handling */ }
+//             }
 
-            // Handle event remapping and buffering ('r' events)
-            if (event.type === 'event' && event.event) {
-                const eventType = event.event.trim();
-                
-                // Special handling for 'c' events - process immediately to ensure text updates
-                if ((eventType === 'c' || eventType === 'content') && event.data) {
-                    // Process 'c' events immediately for faster text updates
-                    processSseEvent(event, accumulator);
-                    return;
-                }
-                
-                // Buffer 'r' events, but with more aggressive processing
-                if (eventType === 'r' && event.data) {
-                    state.rEventBuffer += event.data;
-                    const now = Date.now();
-                    
-                    // More aggressive buffer processing:
-                    // 1. Smaller buffer size (50 instead of 100)
-                    // 2. Shorter timeout (100ms instead of 200ms)
-                    // 3. Also trigger on newlines which often indicate logical breaks
-                    const hasNewline = state.rEventBuffer.includes('\n');
-                    const bufferSizeReached = state.rEventBuffer.length > 50;  // Reduced from 100
-                    const timeoutReached = (now - state.lastREventTime) > 100; // Reduced from 200ms
-                    
-                    if (bufferSizeReached || timeoutReached || hasNewline) {
-                        logger.debug(`Processing 'r' buffer: length=${state.rEventBuffer.length}, timeout=${now - state.lastREventTime}ms, hasNewline=${hasNewline}`);
-                        
-                        const batchedEvent = { type: 'event', event: 'r', data: state.rEventBuffer };
-                        processSseEvent(batchedEvent, accumulator); // Process the buffered 'r' event
+//             // Handle event remapping and buffering ('r' events)
+//             if (event.type === 'event' && event.event) {
+//                 const eventType = event.event.trim();
+//                 
+//                 // Special handling for 'c' events - process immediately to ensure text updates
+//                 if ((eventType === 'c' || eventType === 'content') && event.data) {
+//                     // Process 'c' events immediately for faster text updates
+//                     processSseEvent(event, accumulator);
+//                     return;
+//                 }
+//                 
+//                 // Buffer 'r' events, but with more aggressive processing
+//                 if (eventType === 'r' && event.data) {
+//                     state.rEventBuffer += event.data;
+//                     const now = Date.now();
+//                     
+//                     // More aggressive buffer processing:
+//                     // 1. Smaller buffer size (50 instead of 100)
+//                     // 2. Shorter timeout (100ms instead of 200ms)
+//                     // 3. Also trigger on newlines which often indicate logical breaks
+//                     const hasNewline = state.rEventBuffer.includes('\n');
+//                     const bufferSizeReached = state.rEventBuffer.length > 50;  // Reduced from 100
+//                     const timeoutReached = (now - state.lastREventTime) > 100; // Reduced from 200ms
+//                     
+//                     if (bufferSizeReached || timeoutReached || hasNewline) {
+//                         logger.debug(`Processing 'r' buffer: length=${state.rEventBuffer.length}, timeout=${now - state.lastREventTime}ms, hasNewline=${hasNewline}`);
+//                         
+//                         const batchedEvent = { type: 'event', event: 'r', data: state.rEventBuffer };
+//                         processSseEvent(batchedEvent, accumulator); // Process the buffered 'r' event
 
-                        // Also process as content if not prefixed (common pattern)
-                        // Check if the buffer looks like raw text rather than a data: line
-                        if (!/^data\s*:/i.test(state.rEventBuffer.trim())) {
-                            const contentEvent = { type: 'event', event: 'content', data: state.rEventBuffer };
-                            processSseEvent(contentEvent, accumulator); // Process as 'content' too
-                        }
-                        
-                        state.rEventBuffer = ""; // Reset buffer
-                        state.lastREventTime = now; // Reset timer
-                    }
-                    
-                    // Before returning, check if we've accumulated text
-                    if (accumulator.content.text && accumulator.content.text.length > 0 && !accumulator.contentLogged) {
-                        logger.debug(`Accumulated text content (length: ${accumulator.content.text.length}): "${accumulator.content.text.substring(0, 50)}..."`);
-                        accumulator.contentLogged = true;
-                    }
-                    
-                    return; // Skip further processing for 'r' events
-                }
-            }
+//                         // Also process as content if not prefixed (common pattern)
+//                         // Check if the buffer looks like raw text rather than a data: line
+//                         if (!/^data\s*:/i.test(state.rEventBuffer.trim())) {
+//                             const contentEvent = { type: 'event', event: 'content', data: state.rEventBuffer };
+//                             processSseEvent(contentEvent, accumulator); // Process as 'content' too
+//                         }
+//                         
+//                         state.rEventBuffer = ""; // Reset buffer
+//                         state.lastREventTime = now; // Reset timer
+//                     }
+//                     
+//                     // Before returning, check if we've accumulated text
+//                     if (accumulator.content.text && accumulator.content.text.length > 0 && !accumulator.contentLogged) {
+//                         logger.debug(`Accumulated text content (length: ${accumulator.content.text.length}): "${accumulator.content.text.substring(0, 50)}..."`);
+//                         accumulator.contentLogged = true;
+//                     }
+//                     
+//                     return; // Skip further processing for 'r' events
+//                 }
+//             }
 
-            // Normal event processing (for non-'r' events, or 'r' events before buffer flush)
-            processSseEvent(event, accumulator);
-            
-            // Check accumulated content after processing any event
-            if (accumulator.content.text && accumulator.content.text.length > 0 && !accumulator.contentLogged) {
-                logger.debug(`Accumulated text content (length: ${accumulator.content.text.length}): "${accumulator.content.text.substring(0, 50)}..."`);
-                accumulator.contentLogged = true;
-            }
-        }
-    });
-}
+//             // Normal event processing (for non-'r' events, or 'r' events before buffer flush)
+//             processSseEvent(event, accumulator);
+//             
+//             // Check accumulated content after processing any event
+//             if (accumulator.content.text && accumulator.content.text.length > 0 && !accumulator.contentLogged) {
+//                 logger.debug(`Accumulated text content (length: ${accumulator.content.text.length}): "${accumulator.content.text.substring(0, 50)}..."`);
+//                 accumulator.contentLogged = true;
+//             }
+//         }
+//     });
+// }
 
 // --- SSE Parser Helper --- END
 
@@ -608,127 +590,127 @@ function _createSseParser(accumulator, state) {
  * Sends updates using OpenAI format.
  * Now accepts either rawChunk (directly from decode) or an accumulator for end-of-stream processing.
  */
-function _sendUpdates(controller, input, modelId, requestId, encoder, streamContext) {
-    // 判断是否是直接传入的原始数据块
-    const isRawChunk = typeof input === 'string';
-    
-    try {
-        if (isRawChunk) {
-            // 处理原始数据：将SSE事件转换为OpenAI格式
-            const rawChunk = input;
-            
-            // 提取并处理"event:r\ndata:xxx"和"event:c\ndata:xxx"格式
-            const rMatches = rawChunk.match(/event:r\s*\r?\ndata:(.*?)(?=\r?\n\r?\nevent|\r?\n\r?\n$|$)/gs);
-            const cMatches = rawChunk.match(/event:c\s*\r?\ndata:(.*?)(?=\r?\n\r?\nevent|\r?\n\r?\n$|$)/gs);
-            
-            // 处理r事件（推理内容）
-            if (rMatches && rMatches.length > 0) {
-                rMatches.forEach(match => {
-                    // 提取data部分并清理
-                    let content = match.replace(/event:r\s*\r?\ndata:/g, '').trim();
-                    
-                    // 进一步清理，去除data:前缀和转义字符
-                    content = content.replace(/\r?\ndata:/g, '\n').trim();
-                    content = content.replace(/\\n/g, '\n');
-                    
-                    if (content && content.length > 0) {
-                        // 创建OpenAI格式的块并发送
-                        const openAiChunk = _createOpenAiDeltaChunk(modelId, requestId, content);
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAiChunk)}\n\n`));
-                    }
-                });
-            }
-            
-            // 处理c事件（内容事件）
-            if (cMatches && cMatches.length > 0) {
-                cMatches.forEach(match => {
-                    // 提取data部分并清理
-                    let content = match.replace(/event:c\s*\r?\ndata:/g, '').trim();
-                    
-                    // 进一步清理，去除data:前缀和转义字符
-                    content = content.replace(/\r?\ndata:/g, '\n').trim();
-                    content = content.replace(/\\n/g, '\n');
-                    
-                    if (content && content.length > 0) {
-                        // 创建OpenAI格式的块并发送
-                        const openAiChunk = _createOpenAiDeltaChunk(modelId, requestId, content);
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAiChunk)}\n\n`));
-                    }
-                });
-            }
-            
-            // 检查sources事件
-            const sourcesMatch = rawChunk.match(/event:sources\s*\r?\ndata:(.*?)(?=\r?\n\r?\nevent|\r?\n\r?\n$|$)/s);
-            if (sourcesMatch && sourcesMatch[1]) {
-                try {
-                    const sourcesData = JSON.parse(sourcesMatch[1].trim());
-                    if (Array.isArray(sourcesData) && sourcesData.length > 0) {
-                        const sourcesUpdate = _createOpenAiFunctionCallChunk(modelId, requestId, "sources", { sources: sourcesData });
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(sourcesUpdate)}\n\n`));
-                    }
-                } catch (e) {
-                    logger.warn('解析sources事件出错:', e);
-                }
-            }
-            
-            // 检查error事件
-            const errorMatch = rawChunk.match(/event:error\s*\r?\ndata:(.*?)(?=\r?\n\r?\nevent|\r?\n\r?\n$|$)/s);
-            if (errorMatch && errorMatch[1]) {
-                const errorData = errorMatch[1].trim();
-                const errorUpdate = _createOpenAiFunctionCallChunk(modelId, requestId, "error", { error: errorData }, true);
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorUpdate)}\n\n`));
-            }
-            
-            // 检查done/close事件，不发送结束信号（由flush处理）
-            if (rawChunk.includes('event:done') || rawChunk.includes('event:close')) {
-                // 这里不直接发送结束信号，由flush处理
-                streamContext.receivedEndSignal = true;
-            }
-        } else {
-            // 处理流结束时传入的完整accumulator
-            const accumulator = input;
-            
-            // 只在结束时调用，所以一次性发送所有剩余文本
-            if (accumulator.content && accumulator.content.text && accumulator.content.text.length > 0) {
-                const textContent = accumulator.content.text;
-                logger.debug(`流结束，发送剩余文本内容，长度: ${textContent.length}`);
-                
-                // 在流结束时使用较小的文本块（60字符）分片发送
-                const chunkSize = 60;
-                for (let i = 0; i < textContent.length; i += chunkSize) {
-                    const chunk = textContent.substring(i, Math.min(i + chunkSize, textContent.length));
-                    if (chunk && chunk.length > 0) {
-                        const openAiChunk = _createOpenAiDeltaChunk(modelId, requestId, chunk);
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAiChunk)}\n\n`));
-                    }
-                }
-            }
-            
-            // 发送sources（如果有且未发送过）
-            if (accumulator.content && accumulator.content.sources && 
-                accumulator.content.sources.length > 0 && !streamContext.sentSources) {
-                const sourcesUpdate = _createOpenAiFunctionCallChunk(modelId, requestId, "sources", { sources: accumulator.content.sources });
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(sourcesUpdate)}\n\n`));
-                streamContext.sentSources = true;
-            }
-            
-            // 发送error（如果有且未发送过）
-            if (accumulator.content && accumulator.content.error && !streamContext.sentError) {
-                const errorUpdate = _createOpenAiFunctionCallChunk(modelId, requestId, "error", { error: accumulator.content.error }, true);
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorUpdate)}\n\n`));
-                streamContext.sentError = true;
-            }
-        }
-    } catch (error) {
-        logger.error('_sendUpdates执行出错:', error);
-        try {
-            const errorPayload = _createOpenAiErrorDetailsChunk(modelId, requestId, `处理数据出错: ${error.message}`);
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorPayload)}\n\n`));
-        } catch (e) {
-            logger.error('发送错误通知时出错:', e);
-        }
-    }
-}
+// function _sendUpdates(controller, input, modelId, requestId, encoder, streamContext) {
+//     // 判断是否是直接传入的原始数据块
+//     const isRawChunk = typeof input === 'string';
+//     
+//     try {
+//         if (isRawChunk) {
+//             // 处理原始数据：将SSE事件转换为OpenAI格式
+//             const rawChunk = input;
+//             
+//             // 提取并处理"event:r\ndata:xxx"和"event:c\ndata:xxx"格式
+//             const rMatches = rawChunk.match(/event:r\s*\r?\ndata:(.*?)(?=\r?\n\r?\nevent|\r?\n\r?\n$|$)/gs);
+//             const cMatches = rawChunk.match(/event:c\s*\r?\ndata:(.*?)(?=\r?\n\r?\nevent|\r?\n\r?\n$|$)/gs);
+//             
+//             // 处理r事件（推理内容）
+//             if (rMatches && rMatches.length > 0) {
+//                 rMatches.forEach(match => {
+//                     // 提取data部分并清理
+//                     let content = match.replace(/event:r\s*\r?\ndata:/g, '').trim();
+//                     
+//                     // 进一步清理，去除data:前缀和转义字符
+//                     content = content.replace(/\r?\ndata:/g, '\n').trim();
+//                     content = content.replace(/\\n/g, '\n');
+//                     
+//                     if (content && content.length > 0) {
+//                         // 创建OpenAI格式的块并发送
+//                         const openAiChunk = _createOpenAiDeltaChunk(modelId, requestId, content);
+//                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAiChunk)}\n\n`));
+//                     }
+//                 });
+//             }
+//             
+//             // 处理c事件（内容事件）
+//             if (cMatches && cMatches.length > 0) {
+//                 cMatches.forEach(match => {
+//                     // 提取data部分并清理
+//                     let content = match.replace(/event:c\s*\r?\ndata:/g, '').trim();
+//                     
+//                     // 进一步清理，去除data:前缀和转义字符
+//                     content = content.replace(/\r?\ndata:/g, '\n').trim();
+//                     content = content.replace(/\\n/g, '\n');
+//                     
+//                     if (content && content.length > 0) {
+//                         // 创建OpenAI格式的块并发送
+//                         const openAiChunk = _createOpenAiDeltaChunk(modelId, requestId, content);
+//                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAiChunk)}\n\n`));
+//                     }
+//                 });
+//             }
+//             
+//             // 检查sources事件
+//             const sourcesMatch = rawChunk.match(/event:sources\s*\r?\ndata:(.*?)(?=\r?\n\r?\nevent|\r?\n\r?\n$|$)/s);
+//             if (sourcesMatch && sourcesMatch[1]) {
+//                 try {
+//                     const sourcesData = JSON.parse(sourcesMatch[1].trim());
+//                     if (Array.isArray(sourcesData) && sourcesData.length > 0) {
+//                         const sourcesUpdate = _createOpenAiFunctionCallChunk(modelId, requestId, "sources", { sources: sourcesData });
+//                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(sourcesUpdate)}\n\n`));
+//                     }
+//                 } catch (e) {
+//                     logger.warn('解析sources事件出错:', e);
+//                 }
+//             }
+//             
+//             // 检查error事件
+//             const errorMatch = rawChunk.match(/event:error\s*\r?\ndata:(.*?)(?=\r?\n\r?\nevent|\r?\n\r?\n$|$)/s);
+//             if (errorMatch && errorMatch[1]) {
+//                 const errorData = errorMatch[1].trim();
+//                 const errorUpdate = _createOpenAiFunctionCallChunk(modelId, requestId, "error", { error: errorData }, true);
+//                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorUpdate)}\n\n`));
+//             }
+//             
+//             // 检查done/close事件，不发送结束信号（由flush处理）
+//             if (rawChunk.includes('event:done') || rawChunk.includes('event:close')) {
+//                 // 这里不直接发送结束信号，由flush处理
+//                 streamContext.receivedEndSignal = true;
+//             }
+//         } else {
+//             // 处理流结束时传入的完整accumulator
+//             const accumulator = input;
+//             
+//             // 只在结束时调用，所以一次性发送所有剩余文本
+//             if (accumulator.content && accumulator.content.text && accumulator.content.text.length > 0) {
+//                 const textContent = accumulator.content.text;
+//                 logger.debug(`流结束，发送剩余文本内容，长度: ${textContent.length}`);
+//                 
+//                 // 在流结束时使用较小的文本块（60字符）分片发送
+//                 const chunkSize = 60;
+//                 for (let i = 0; i < textContent.length; i += chunkSize) {
+//                     const chunk = textContent.substring(i, Math.min(i + chunkSize, textContent.length));
+//                     if (chunk && chunk.length > 0) {
+//                         const openAiChunk = _createOpenAiDeltaChunk(modelId, requestId, chunk);
+//                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAiChunk)}\n\n`));
+//                     }
+//                 }
+//             }
+//             
+//             // 发送sources（如果有且未发送过）
+//             if (accumulator.content && accumulator.content.sources && 
+//                 accumulator.content.sources.length > 0 && !streamContext.sentSources) {
+//                 const sourcesUpdate = _createOpenAiFunctionCallChunk(modelId, requestId, "sources", { sources: accumulator.content.sources });
+//                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(sourcesUpdate)}\n\n`));
+//                 streamContext.sentSources = true;
+//             }
+//             
+//             // 发送error（如果有且未发送过）
+//             if (accumulator.content && accumulator.content.error && !streamContext.sentError) {
+//                 const errorUpdate = _createOpenAiFunctionCallChunk(modelId, requestId, "error", { error: accumulator.content.error }, true);
+//                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorUpdate)}\n\n`));
+//                 streamContext.sentError = true;
+//             }
+//         }
+//     } catch (error) {
+//         logger.error('_sendUpdates执行出错:', error);
+//         try {
+//             const errorPayload = _createOpenAiErrorDetailsChunk(modelId, requestId, `处理数据出错: ${error.message}`);
+//             controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorPayload)}\n\n`));
+//         } catch (e) {
+//             logger.error('发送错误通知时出错:', e);
+//         }
+//     }
+// }
 
 /**
  * Handles the start logic for the TransformStream.
@@ -1031,7 +1013,7 @@ async function _processNonStreamingResponse(backendResponse, decoder) {
  * Main handler using the initialized WASM via glue code.
  * ADAPTED to use the new SSE processing logic and helper functions.
  */
-export async function handleRustLogicRequest(requestData, modelId, providerConfig) {
+export async function handleRustLogicRequest(requestData, modelId, _providerConfig) {
     logger.debug(`Handling request for internal_rust_logic with model: ${modelId}`);
 
     // Step 1: Ensure WASM is initialized

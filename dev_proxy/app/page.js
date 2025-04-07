@@ -124,7 +124,6 @@ export default function HomePage() {
       // Handle the stream
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let accumulatedResponse = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -150,7 +149,6 @@ export default function HomePage() {
                     const parsedData = JSON.parse(dataStr);
                     if (parsedData.choices && parsedData.choices[0]?.delta?.content) {
                         const contentDelta = parsedData.choices[0].delta.content;
-                        accumulatedResponse += contentDelta;
                         setResponse(prev => prev + contentDelta); // Update state progressively
                     }
                  } catch (e) {
