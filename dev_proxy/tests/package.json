@@ -1,0 +1,9 @@
+{
+  "name": "stream-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Test scripts for stream handling",
+  "scripts": {
+    "test": "node stream_test.js"
+  }
+} 
