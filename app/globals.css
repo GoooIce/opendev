@@ -1,26 +1,118 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Background */
+  --bg-primary: #0A1628;
+  --bg-secondary: #0D2137;
+  --bg-card: rgba(13, 33, 55, 0.85);
+
+  /* Primary - Life Green */
+  --color-primary: #1DB954;
+  --color-primary-light: #2ECC71;
+  --color-primary-glow: rgba(29, 185, 84, 0.6);
+
+  /* Accent - Harvest Gold */
+  --color-accent: #F0A500;
+  --color-accent-dark: #C48800;
+
+  /* Semantic */
+  --color-danger: #E74C3C;
+  --color-info: #3498DB;
+  --color-success: #1DB954;
+
+  /* Text */
+  --text-primary: #E8ECF1;
+  --text-secondary: #8B9BB4;
+
+  /* Border */
+  --border-color: rgba(29, 185, 84, 0.2);
+  --border-glow: rgba(29, 185, 84, 0.4);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-primary: var(--color-primary);
+  --color-accent: var(--color-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-glow);
+  border-radius: 2px;
+}
+
+/* Corner decoration */
+.corner-decoration {
+  position: absolute;
+  pointer-events: none;
+}
+.corner-decoration::before,
+.corner-decoration::after {
+  content: '';
+  position: absolute;
+  background: var(--color-primary);
+}
+.corner-decoration.top-left::before { top: 0; left: 0; width: 2px; height: 16px; }
+.corner-decoration.top-left::after { top: 0; left: 0; width: 16px; height: 2px; }
+.corner-decoration.top-right::before { top: 0; right: 0; width: 2px; height: 16px; }
+.corner-decoration.top-right::after { top: 0; right: 0; width: 16px; height: 2px; }
+.corner-decoration.bottom-left::before { bottom: 0; left: 0; width: 2px; height: 16px; }
+.corner-decoration.bottom-left::after { bottom: 0; left: 0; width: 16px; height: 2px; }
+.corner-decoration.bottom-right::before { bottom: 0; right: 0; width: 2px; height: 16px; }
+.corner-decoration.bottom-right::after { bottom: 0; right: 0; width: 16px; height: 2px; }
+
+/* Glow text */
+.glow-text {
+  text-shadow: 0 0 10px var(--color-primary-glow);
+}
+
+/* Card base style */
+.data-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fade-in animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Pulse glow for alerts */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(231, 76, 60, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(231, 76, 60, 0.6); }
+}
+
+.alert-pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Number counter */
+@keyframes countUp {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
 }
