@@ -29,55 +29,57 @@ const STATUS_STYLES: Record<TaskStatus, { color: string; icon: string }> = {
   failed: { color: "#E74C3C", icon: "✕" },
 };
 
-function randomId(): string {
-  return `T${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
 }
 
-function randomElapsed(): string {
-  const s = Math.floor(Math.random() * 300) + 5;
-  const m = Math.floor(s / 60);
-  return m > 0 ? `${m}m${s % 60}s` : `${s}s`;
-}
-
-function randomTimestamp(): string {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - Math.floor(Math.random() * 60));
-  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}:${d.getSeconds().toString().padStart(2, "0")}`;
-}
-
-function createEntry(statusOverride?: TaskStatus): LogEntry {
-  const taskDef = TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
+function createSeededEntry(index: number, statusOverride?: TaskStatus): LogEntry {
+  const s = (i: number) => seededRandom(index * 100 + i);
+  const typeIdx = Math.floor(s(1) * TASK_TYPES.length);
+  const taskDef = TASK_TYPES[typeIdx];
   const statuses: TaskStatus[] = ["queued", "running", "completed", "completed", "completed", "failed"];
-  const status = statusOverride ?? statuses[Math.floor(Math.random() * statuses.length)];
+  const status = statusOverride ?? statuses[Math.floor(s(2) * statuses.length)];
+  const progress = status === "completed" ? 100 : status === "failed" ? Math.floor(s(3) * 80) : Math.floor(s(4) * 100);
+  const totalSec = Math.floor(s(5) * 300) + 5;
+  const elapsed = totalSec >= 60 ? `${Math.floor(totalSec / 60)}m${totalSec % 60}s` : `${totalSec}s`;
+  const h = Math.floor(s(6) * 2) + 14;
+  const m = Math.floor(s(7) * 60);
+  const sec = Math.floor(s(8) * 60);
+  const timestamp = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+
   return {
-    id: randomId(),
+    id: `T${String(Math.floor(s(9) * 9000) + 1000)}`,
     type: taskDef.type,
     status,
-    progress: status === "completed" ? 100 : status === "failed" ? Math.floor(Math.random() * 80) : Math.floor(Math.random() * 100),
-    elapsed: randomElapsed(),
-    timestamp: randomTimestamp(),
+    progress,
+    elapsed,
+    timestamp,
   };
 }
+
+const INITIAL_LOGS: LogEntry[] = Array.from({ length: 10 }, (_, i) => createSeededEntry(i));
 
 const TYPE_MAP = Object.fromEntries(TASK_TYPES.map((t) => [t.type, t]));
 
 export default function AnalysisLog() {
-  const [logs, setLogs] = useState<LogEntry[]>(() =>
-    Array.from({ length: 10 }, () => createEntry())
-  );
+  const [logs, setLogs] = useState<LogEntry[]>(INITIAL_LOGS);
   const [paused, setPaused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const counterRef = useRef(INITIAL_LOGS.length);
 
   useEffect(() => {
     if (paused) return;
     const id = setInterval(() => {
+      counterRef.current += 1;
+      const newEntry = createSeededEntry(counterRef.current + 1000, "running");
       setLogs((prev) => {
         const updated = prev.map((entry) =>
           entry.status === "running"
-            ? { ...entry, progress: Math.min(100, entry.progress + Math.floor(Math.random() * 15)) }
+            ? { ...entry, progress: Math.min(100, entry.progress + Math.floor(seededRandom(entry.progress * 7 + 13) * 15)) }
             : entry
         );
-        return [createEntry("running"), ...updated].slice(0, 20);
+        return [newEntry, ...updated].slice(0, 20);
       });
     }, 8000);
     return () => clearInterval(id);
