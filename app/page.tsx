@@ -1,107 +1,94 @@
 "use client";
 
-import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import Header from "@/components/dashboard/Header";
 import KPICard from "@/components/dashboard/KPICard";
-import CropYieldChart from "@/components/charts/CropYieldChart";
-import ECommerceTrend from "@/components/charts/ECommerceTrend";
-import WeatherPanel from "@/components/charts/WeatherPanel";
-import MapContainer from "@/components/map/MapContainer";
-import PestWarning from "@/components/panels/PestWarning";
-import EquipmentPanel from "@/components/panels/EquipmentPanel";
-import IrrigationPanel from "@/components/panels/IrrigationPanel";
-import DataLog from "@/components/panels/DataLog";
-import AIChatPanel from "@/lib/ai-mock"; // AI chat panel component (tsx)
+import CornPlantDiagram from "@/components/organism/CornPlantDiagram";
+import OmicsDataPanel from "@/components/panels/OmicsDataPanel";
+import ConstructPanel from "@/components/panels/ConstructPanel";
+import { usePlatformStore } from "@/store/platform-store";
+import AgentPanel from "@/components/panels/AgentPanel";
+import AIPanel from "@/components/platform/AIPanel";
+import ValidationPanel from "@/components/panels/ValidationPanel";
+import AnalysisLog from "@/components/panels/AnalysisLog";
+import ManhattanPlot from "@/components/charts/ManhattanPlot";
+import CoexpressionNetwork from "@/components/charts/CoexpressionNetwork";
+import PhenotypeTimeline from "@/components/charts/PhenotypeTimeline";
+import type { TabId } from "@/data/types";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("主页");
+  const { activeTab, setActiveTab } = usePlatformStore();
 
   return (
-    <>
-      <DashboardLayout
-        header={<Header activeTab={activeTab} onTabChange={setActiveTab} />}
-        leftPanel={
-          <>
-            <div className="flex-1">
-              <PestWarning />
-            </div>
-            <div style={{ height: "22vh" }}>
-              <CropYieldChart />
-            </div>
-          </>
-        }
-        centerTop={
-          <>
-            <KPICard
-              icon="🌾"
-              title="粮食总产量"
-              value={14130}
-              unit="亿斤"
-              trend={{ value: 1.6, label: "同比" }}
-              delay={0}
-            />
-            <KPICard
-              icon="🌱"
-              title="粮食播种面积"
-              value={17.9}
-              unit="亿亩"
-              decimals={1}
-              trend={{ value: 0.3, label: "同比" }}
-              delay={200}
-            />
-            <KPICard
-              icon="🛡️"
-              title="耕地总面积"
-              value={19.4}
-              unit="亿亩（红线 18 亿亩）"
-              decimals={1}
-              trend={{ value: 0.9, label: "较 2020" }}
-              delay={400}
-            />
-            <KPICard
-              icon="🚜"
-              title="综合机械化率"
-              value={75.64}
-              unit="%"
-              decimals={2}
-              trend={{ value: 1.35, label: "同比" }}
-              delay={600}
-            />
-          </>
-        }
-        centerMid={<MapContainer />}
-        centerBottom={
-          <>
-            <div className="flex-1"><ECommerceTrend /></div>
-            <div className="flex-1"><WeatherPanel /></div>
-            <div className="flex-1">
-              <div className="data-card p-[0.4vw] h-full">
-                <h3 style={{ fontSize: "clamp(9px, 0.55vw, 12px)", color: "var(--text-secondary)", textAlign: "center" }}>
-                  农业经济贡献
-                </h3>
-                <div className="flex-1" style={{ height: "calc(100% - 20px)" }}>
-                  {/* Will be replaced by EconomyRing import if needed */}
-                </div>
-              </div>
-            </div>
-          </>
-        }
-        rightPanel={
-          <>
-            <div style={{ height: "38%" }}>
-              <EquipmentPanel />
-            </div>
-            <div style={{ height: "30%" }}>
-              <IrrigationPanel />
-            </div>
-            <div style={{ height: "30%" }}>
-              <DataLog />
-            </div>
-          </>
-        }
-      />
-      <AIChatPanel />
-    </>
+    <DashboardLayout
+      header={<Header activeTab={activeTab} onTabChange={(tab: TabId) => setActiveTab(tab)} />}
+      leftPanel={
+        <>
+          <OmicsDataPanel />
+          <ConstructPanel />
+        </>
+      }
+      centerTop={
+        <>
+          <KPICard
+            icon="🧬"
+            title="NUE综合指数"
+            value={68.4}
+            unit="%"
+            decimals={1}
+            trend={{ value: 5.2, label: "较上季" }}
+            delay={0}
+            sparkline={[58, 60, 63, 65, 62, 66, 68.4]}
+            tags={[{ label: "实时", color: "var(--color-success)" }]}
+          />
+          <KPICard
+            icon="gene"
+            title="候选基因库规模"
+            value={1247}
+            unit="个氮相关基因"
+            trend={{ value: 17.5, label: "本季新增" }}
+            delay={200}
+            sparkline={[800, 920, 980, 1050, 1100, 1180, 1247]}
+            tags={[{ label: "基因组", color: "var(--color-genomics)" }]}
+          />
+          <KPICard
+            icon="✓"
+            title="已验证功能基因"
+            value={38}
+            unit="个"
+            trend={{ value: 12, label: "本月新增" }}
+            delay={400}
+            sparkline={[15, 18, 22, 26, 30, 35, 38]}
+            tags={[{ label: "已发表", color: "var(--color-protein)" }]}
+          />
+          <KPICard
+            icon="📈"
+            title="高通量表型通量"
+            value={2400}
+            unit="株/日"
+            trend={{ value: 15.3, label: "较上月" }}
+            delay={600}
+            sparkline={[1800, 1950, 2000, 2100, 2200, 2350, 2400]}
+            tags={[{ label: "表型组", color: "var(--color-phenome)" }]}
+          />
+        </>
+      }
+      centerMid={<CornPlantDiagram />}
+      centerBottom={
+        <>
+          <ManhattanPlot />
+          <CoexpressionNetwork />
+          <PhenotypeTimeline />
+        </>
+      }
+      rightPanel={
+        <>
+          <AgentPanel />
+          <AIPanel />
+          <ValidationPanel />
+          <AnalysisLog />
+        </>
+      }
+    />
   );
 }

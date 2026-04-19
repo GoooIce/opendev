@@ -21,10 +21,8 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <div className="w-screen h-screen flex flex-col" style={{ background: "var(--bg-primary)" }}>
-      {/* Header */}
       {header}
 
-      {/* Main content area */}
       <main className="flex-1 flex gap-[0.5vh] px-[1vw] pb-[0.5vh] min-h-0">
         {/* Left panel */}
         <aside
@@ -39,7 +37,7 @@ export default function DashboardLayout({
           className="flex-1 min-w-0"
           style={{
             display: "grid",
-            gridTemplateRows: "16vh 1fr 22vh",
+            gridTemplateRows: "14vh 1fr 20vh",
             gap: "0.5vh",
           }}
         >
@@ -48,7 +46,7 @@ export default function DashboardLayout({
             {centerTop}
           </div>
 
-          {/* Center mid: Map */}
+          {/* Center mid: Corn plant diagram */}
           <div style={{ minHeight: 0, overflow: "hidden" }}>
             {centerMid}
           </div>

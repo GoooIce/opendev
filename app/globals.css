@@ -27,6 +27,19 @@
   /* Border */
   --border-color: rgba(29, 185, 84, 0.2);
   --border-glow: rgba(29, 185, 84, 0.4);
+
+  /* Omics Colors */
+  --color-genomics: #3498DB;
+  --color-transcript: #9B59B6;
+  --color-protein: #E67E22;
+  --color-metabolite: #1ABC9C;
+  --color-phenome: #E74C3C;
+
+  /* Glass & Effects */
+  --bg-glass: rgba(29, 185, 84, 0.05);
+  --border-active: rgba(29, 185, 84, 0.5);
+  --shadow-glow: 0 0 20px rgba(29, 185, 84, 0.3);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {
@@ -115,4 +128,78 @@ body {
 @keyframes countUp {
   from { opacity: 0.5; }
   to { opacity: 1; }
+}
+
+/* Particle flow */
+@keyframes particleFlow {
+  0% { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Process node pulse */
+@keyframes nodePulse {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--color-primary-glow)); }
+  50% { filter: drop-shadow(0 0 12px var(--color-primary-glow)); }
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Process status bar shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Corn logo breathing overlay */
+@keyframes cornBreathe {
+  0%, 100% { opacity: 0.04; }
+  50% { opacity: 0.09; }
+}
+
+.corn-logo-breathe {
+  animation: cornBreathe 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  mix-blend-mode: screen;
+  transition: opacity 0.8s ease;
+}
+
+/* Process connection line flow */
+@keyframes processFlow {
+  0% { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.process-flow-line {
+  animation: processFlow 1.5s linear infinite;
+}
+
+.particle-flow {
+  animation: particleFlow 1s linear infinite;
+}
+
+.node-pulse {
+  animation: nodePulse 2s ease-in-out infinite;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.shimmer-bar {
+  background: linear-gradient(90deg, transparent, var(--bg-glass), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
 }

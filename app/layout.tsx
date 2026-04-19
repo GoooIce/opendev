@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "农业产业大数据指挥仓",
-  description: "现代农业产业大数据可视化指挥仓系统",
+  title: "玉米氮高效高通量基因挖掘与应用平台",
+  description: "基于多组学数据的玉米氮高效候选基因智能挖掘与功能验证平台",
 };
 
 export default function RootLayout({
