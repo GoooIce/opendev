@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { candidateGenes } from "@/data/genes";
 import { usePlatformStore } from "@/store/platform-store";
 import type { CandidateGene } from "@/data/types";
@@ -64,8 +64,14 @@ export default function AgentPanel() {
     const filtered = candidateGenes
       .filter((g) => (g.agentScore ?? 0) >= minScore)
       .sort((a, b) => (b.agentScore ?? 0) - (a.agentScore ?? 0));
-    setAgentResults(filtered);
     return filtered.slice(0, 15);
+  }, [minScore]);
+
+  useEffect(() => {
+    const filtered = candidateGenes
+      .filter((g) => (g.agentScore ?? 0) >= minScore)
+      .sort((a, b) => (b.agentScore ?? 0) - (a.agentScore ?? 0));
+    setAgentResults(filtered);
   }, [minScore, setAgentResults]);
 
   const handleGeneClick = useCallback(
