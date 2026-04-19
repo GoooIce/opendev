@@ -95,7 +95,7 @@ export default function CornPlantDiagram() {
         />
 
         {/* === CORN PLANT SVG (detailed, scaled into 600x520 viewBox) === */}
-        <g transform="translate(110, 5) scale(0.63)" opacity="0.5">
+        <g transform="translate(110, 5) scale(0.63)" opacity="0.1">
           {/* Roots */}
           <g fill="none" stroke="#8b7355" strokeWidth="1.5" opacity="0.8">
             <path d="M200 480 Q200 520 198 580 Q196 620 195 650" strokeWidth="3" stroke="#7a6548"/>

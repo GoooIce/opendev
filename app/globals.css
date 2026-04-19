@@ -166,8 +166,8 @@ body {
 
 /* Corn logo breathing overlay */
 @keyframes cornBreathe {
-  0%, 100% { opacity: 0.04; }
-  50% { opacity: 0.09; }
+  0%, 100% { opacity: 0.02; }
+  50% { opacity: 0.045; }
 }
 
 .corn-logo-breathe {
