@@ -156,9 +156,11 @@ export default function AIPanel() {
           transition: "transform 0.2s",
         }}
       >
-        <span style={{ fontSize: 22, lineHeight: 1 }}>
-          {isOpen ? "✕" : "🤖"}
-        </span>
+        {isOpen ? (
+          <span style={{ fontSize: 18, lineHeight: 1, color: "var(--text-primary)" }}>✕</span>
+        ) : (
+          <img src="/ai.png" alt="AI" style={{ width: 26, height: 26, borderRadius: "50%" }} />
+        )}
       </button>
 
       {/* Chat panel */}
