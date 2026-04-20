@@ -156,11 +156,9 @@ export default function AIPanel() {
           transition: "transform 0.2s",
         }}
       >
-        {isOpen ? (
-          <span style={{ fontSize: 18, lineHeight: 1, color: "var(--text-primary)" }}>✕</span>
-        ) : (
-          <img src="/ai.png" alt="AI" style={{ width: 26, height: 26, borderRadius: "50%" }} />
-        )}
+        <span style={{ fontSize: 22, lineHeight: 1 }}>
+          {isOpen ? "✕" : "🤖"}
+        </span>
       </button>
 
       {/* Chat panel */}
@@ -173,7 +171,6 @@ export default function AIPanel() {
             zIndex: 9999,
             width: 380,
             height: 520,
-            background: "#0A1628",
             border: "1px solid rgba(29,185,84,0.2)",
             borderRadius: 12,
             display: "flex",
@@ -181,11 +178,24 @@ export default function AIPanel() {
             overflow: "hidden",
             boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(29,185,84,0.1)",
             animation: "chatPanelIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            background: "#0A1628",
           }}
         >
+          {/* Background image */}
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "url(/ai.png)",
+            backgroundSize: "180px",
+            backgroundPosition: "center 70%",
+            backgroundRepeat: "no-repeat",
+            opacity: 0.06,
+            pointerEvents: "none",
+          }} />
           {/* Header */}
           <div
             style={{
+              position: "relative",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -248,6 +258,7 @@ export default function AIPanel() {
           {/* Quick actions */}
           <div
             style={{
+              position: "relative",
               display: "flex",
               gap: 6,
               padding: "8px 16px",
@@ -285,6 +296,7 @@ export default function AIPanel() {
           <div
             ref={scrollRef}
             style={{
+              position: "relative",
               flex: 1,
               overflowY: "auto",
               padding: "12px 16px",
@@ -337,6 +349,7 @@ export default function AIPanel() {
           <form
             onSubmit={handleSubmit}
             style={{
+              position: "relative",
               display: "flex",
               gap: 8,
               padding: "12px 16px",
