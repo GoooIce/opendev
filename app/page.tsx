@@ -3,7 +3,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import Header from "@/components/dashboard/Header";
 import KPICard from "@/components/dashboard/KPICard";
-import CornPlantDiagram from "@/components/organism/CornPlantDiagram";
+import CenterCarousel from "@/components/dashboard/CenterCarousel";
 import OmicsDataPanel from "@/components/panels/OmicsDataPanel";
 import ConstructPanel from "@/components/panels/ConstructPanel";
 import { usePlatformStore } from "@/store/platform-store";
@@ -72,7 +72,7 @@ export default function Home() {
           />
         </>
       }
-      centerMid={<CornPlantDiagram />}
+      centerMid={<CenterCarousel />}
       centerBottom={
         <>
           <ManhattanPlot />
