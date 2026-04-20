@@ -164,18 +164,6 @@ body {
   100% { background-position: 200% 0; }
 }
 
-/* Corn logo breathing overlay */
-@keyframes cornBreathe {
-  0%, 100% { opacity: 0.02; }
-  50% { opacity: 0.045; }
-}
-
-.corn-logo-breathe {
-  animation: cornBreathe 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  mix-blend-mode: screen;
-  transition: opacity 0.8s ease;
-}
-
 /* Process connection line flow */
 @keyframes processFlow {
   0% { stroke-dashoffset: 20; }
