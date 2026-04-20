@@ -8,7 +8,6 @@ import OmicsDataPanel from "@/components/panels/OmicsDataPanel";
 import ConstructPanel from "@/components/panels/ConstructPanel";
 import { usePlatformStore } from "@/store/platform-store";
 import AgentPanel from "@/components/panels/AgentPanel";
-import AIPanel from "@/components/platform/AIPanel";
 import ValidationPanel from "@/components/panels/ValidationPanel";
 import AnalysisLog from "@/components/panels/AnalysisLog";
 import ManhattanPlot from "@/components/charts/ManhattanPlot";
@@ -84,7 +83,6 @@ export default function Home() {
       rightPanel={
         <>
           <AgentPanel />
-          <AIPanel />
           <ValidationPanel />
           <AnalysisLog />
         </>
