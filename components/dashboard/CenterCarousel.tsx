@@ -10,8 +10,8 @@ const MapContainer = dynamic(
 );
 
 const SLIDES = [
-  { id: "plant", label: "氮代谢过程" },
   { id: "map", label: "试验站点分布" },
+  { id: "plant", label: "氮代谢过程" },
 ] as const;
 
 const INTERVAL = 15_000;
@@ -50,7 +50,7 @@ export default function CenterCarousel() {
             pointerEvents: index === 0 ? "auto" : "none",
           }}
         >
-          <CornPlantDiagram />
+          <MapContainer />
         </div>
         <div
           style={{
@@ -61,7 +61,7 @@ export default function CenterCarousel() {
             pointerEvents: index === 1 ? "auto" : "none",
           }}
         >
-          <MapContainer />
+          <CornPlantDiagram />
         </div>
       </div>
 
